@@ -10,6 +10,7 @@
 namespace NinjaMutex\Tests\Mock;
 
 use PDO;
+use PDOStatement;
 
 /**
  * Mock PDO to mimic *_lock functionality
@@ -33,24 +34,68 @@ class MockPDO extends PDO
      */
     protected $current = array();
 
-    public function __construct($dsn, $user, $password)
+    /**
+     * Creates a PDO instance representing a connection to a database
+     * @link http://php.net/manual/en/pdo.construct.php
+     * @param $dsn
+     * @param $username [optional]
+     * @param $passwd   [optional]
+     * @param $options  [optional]
+     */
+    public function __construct($dsn, $username, $passwd, $options)
     {
         $this->_mock_pdo_statement = new MockPDOStatement();
     }
 
     /**
-     * @param  string           $statement
-     * @return MockPDOStatement
+     * Executes an SQL statement, returning a result set as a PDOStatement object
+     * @link http://php.net/manual/en/pdo.query.php
+     * @param string $statement <p>
+     * The SQL statement to prepare and execute.
+     * </p>
+     * <p>
+     * Data inside the query should be properly escaped.
+     * </p>
+     * @param int $mode <p>
+     * The fetch mode must be one of the PDO::FETCH_* constants.
+     * </p>
+     * @param mixed $arg3 <p>
+     * The second and following parameters are the same as the parameters for PDOStatement::setFetchMode.
+     * </p>
+     * @param array $ctorargs [optional] <p>
+     * Arguments of custom class constructor when the <i>mode</i>
+     * parameter is set to <b>PDO::FETCH_CLASS</b>.
+     * </p>
+     * @return PDOStatement <b>PDO::query</b> returns a PDOStatement object, or <b>FALSE</b>
+     * on failure.
      */
-    public function query($statement)
+    public function query($statement, $mode = PDO::ATTR_DEFAULT_FETCH_MODE, $arg3 = null, array $ctorargs = array())
     {
-        if (preg_match('/RELEASE_LOCK\("(.*)"\)/', $statement, $m)) {
+        if (preg_match('/RELEASE_LOCK\((.*)\)/', $statement, $m)) {
             return $this->_mock_release_lock($m[1]);
-        } elseif (preg_match('/GET_LOCK\("(.*)", *(.*)\)/', $statement, $m)) {
+        } elseif (preg_match('/GET_LOCK\((.*), *(.*)\)/', $statement, $m)) {
             return $this->_mock_get_lock($m[1], $m[2]);
-        } elseif (preg_match('/IS_FREE_LOCK\("(.*)"\)/', $statement, $m)) {
+        } elseif (preg_match('/IS_FREE_LOCK\((.*)\)/', $statement, $m)) {
             return $this->_mock_is_free_lock($m[1]);
         }
+    }
+
+    /**
+     * Quotes a string for use in a query.
+     * @link http://php.net/manual/en/pdo.quote.php
+     * @param string $string <p>
+     * The string to be quoted.
+     * </p>
+     * @param int $parameter_type [optional] <p>
+     * Provides a data type hint for drivers that have alternate quoting styles.
+     * </p>
+     * @return string a quoted string that is theoretically safe to pass into an
+     * SQL statement. Returns <b>FALSE</b> if the driver does not support quoting in
+     * this way.
+     */
+    public function quote($string, $parameter_type = PDO::PARAM_STR)
+    {
+        return $string;
     }
 
     /**

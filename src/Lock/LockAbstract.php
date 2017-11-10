@@ -21,20 +21,20 @@ abstract class LockAbstract implements LockInterface
     const USLEEP_TIME = 100;
 
     /**
-     * Information which allows to track down process which acquired lock
+     * Provides information which allows to track down process which acquired lock
      *
-     * @var array
+     * @var LockInformationProviderInterface
      */
-    protected $lockInformation = array();
+    protected $lockInformationProvider;
 
     /**
      * @var array
      */
     protected $locks = array();
 
-    public function __construct()
+    public function __construct(LockInformationProviderInterface $informationProvider = null)
     {
-        $this->lockInformation = $this->generateLockInformation();
+        $this->lockInformationProvider = $informationProvider ? : new BasicLockInformationProvider();
     }
 
     public function __clone()
@@ -93,35 +93,11 @@ abstract class LockAbstract implements LockInterface
 
     /**
      * @param  string $name
-     * @param  bool   $blocking
+     * @param  bool   $blocking If lock provider supports blocking then you can pass this param through,
+     *                          otherwise, ignore this variable, default blocking method will be used.
      * @return bool
      */
     abstract protected function getLock($name, $blocking);
-
-    /**
-     * Information generate by this method allow to track down process which acquired lock
-     * .
-     * By default it returns array with:
-     * 1. pid
-     * 2. server_ip
-     * 3. server_name
-     *
-     * @return array
-     */
-    protected function generateLockInformation()
-    {
-        $pid = getmypid();
-        $hostname = gethostname();
-        $host = gethostbyname($hostname);
-
-        // Compose data to one string
-        $params = array();
-        $params[] = $pid;
-        $params[] = $host;
-        $params[] = $hostname;
-
-        return $params;
-    }
 
     /**
      * Information returned by this method allow to track down process which acquired lock
@@ -130,6 +106,22 @@ abstract class LockAbstract implements LockInterface
      */
     protected function getLockInformation()
     {
-        return $this->lockInformation;
+        return $this->lockInformationProvider->getLockInformation();
+    }
+
+    /**
+     * @return LockInformationProviderInterface
+     */
+    public function getLockInformationProvider()
+    {
+        return $this->lockInformationProvider;
+    }
+
+    /**
+     * @param LockInformationProviderInterface $lockInformationProvider
+     */
+    public function setLockInformationProvider($lockInformationProvider)
+    {
+        $this->lockInformationProvider = $lockInformationProvider;
     }
 }

@@ -13,7 +13,7 @@ use NinjaMutex\Lock\DirectoryLock;
 use NinjaMutex\Lock\FlockLock;
 use NinjaMutex\Lock\MemcachedLock;
 use NinjaMutex\Lock\MemcacheLock;
-use NinjaMutex\Lock\MySqlLock;
+use NinjaMutex\Lock\MySQLPDOLock;
 use NinjaMutex\Lock\PredisRedisLock;
 use NinjaMutex\Lock\PhpRedisLock;
 use NinjaMutex\Tests\Lock\Fabric\MemcachedLockFabric;
@@ -25,6 +25,7 @@ use NinjaMutex\Tests\Mock\MockPredisClient;
 use org\bovigo\vfs;
 use Predis;
 use Redis;
+use Memcache;
 
 abstract class AbstractTest extends \PHPUnit_Framework_TestCase
 {
@@ -57,14 +58,12 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
      */
     public function lockImplementorProvider()
     {
-        $memcacheLockFabric = new MemcacheLockFabric();
         $memcachedLockFabric = new MemcachedLockFabric();
 
         $data = array(
             // Just mocks
             $this->provideFlockMockLock(),
             $this->provideDirectoryMockLock(),
-            $this->provideMemcacheMockLock(),
             $this->provideMemcachedMockLock(),
             $this->provideMysqlMockLock(),
             $this->providePredisRedisMockLock(),
@@ -72,12 +71,18 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
             // Real locks
             $this->provideFlockLock(),
             $this->provideDirectoryLock(),
-            array($memcacheLockFabric->create()),
             array($memcachedLockFabric->create()),
             $this->provideMysqlLock(),
             $this->providePredisRedisLock(),
             $this->providePhpRedisLock(),
         );
+
+        if (class_exists("Memcache")) {
+            array_push($data, $this->provideMemcacheMockLock());
+
+            $memcacheLockFabric = new MemcacheLockFabric();
+            array_push($data, array($memcacheLockFabric->create()));
+        }
 
         return $data;
     }
@@ -89,11 +94,14 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
     {
         $data = array(
             // Just mocks
-            $this->provideMemcacheMockLock(),
             $this->provideMemcachedMockLock(),
             $this->providePredisRedisMockLock(),
             $this->providePhpRedisMockLock(),
         );
+
+        if (class_exists("Memcache")) {
+            array_push($data, $this->provideMemcacheMockLock());
+        }
 
         return $data;
     }
@@ -103,13 +111,16 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
      */
     public function lockFabricWithExpirationProvider()
     {
-        $memcacheLockFabric = new MemcacheLockFabric();
         $memcachedLockFabric = new MemcachedLockFabric();
 
         $data = array(
-            array($memcacheLockFabric),
             array($memcachedLockFabric),
         );
+
+        if (class_exists("Memcache")) {
+            $memcacheLockFabric = new MemcacheLockFabric();
+            array_push($data, array($memcacheLockFabric));
+        }
 
         return $data;
     }
@@ -155,7 +166,7 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
      */
     protected function provideMysqlMockLock()
     {
-        return array(new MySqlLock('', '', '', 3306, 'NinjaMutex\Tests\Mock\MockPDO'));
+        return array(new MySQLPDOLock('', null, null, null, 'NinjaMutex\Tests\Mock\MockPDO'));
     }
 
     /**
@@ -199,7 +210,7 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
      */
     protected function provideMysqlLock()
     {
-        return array(new MySqlLock('root', '', '127.0.0.1'));
+        return array(new MySQLPDOLock('mysql:', 'root', ''));
     }
 
     /**
