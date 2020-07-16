@@ -128,43 +128,6 @@ class LockTest extends AbstractTest
     }
 
     /**
-     * @issue https://github.com/arvenil/ninja-mutex/pull/4
-     * It's not working for hhvm, see below link to understand limitation
-     * https://github.com/facebook/hhvm/blob/af329776c9f740cc1c8c4791f673ba5aa49042ce/hphp/doc/inconsistencies#L40-L45
-     *
-     * @dataProvider lockImplementorWithBackendProvider
-     * @param LockInterface             $lockImplementor
-     * @param PermanentServiceInterface $backend
-     */
-    public function testIfLockDestructorThrowsWhenBackendIsUnavailable(LockInterface $lockImplementor, PermanentServiceInterface $backend)
-    {
-        $name = "forfiter";
-
-        $this->assertFalse($lockImplementor->isLocked($name));
-        $this->assertTrue($lockImplementor->acquireLock($name, 0));
-        $this->assertTrue($lockImplementor->isLocked($name));
-
-        // make backend unavailable
-        $backend->setAvailable(false);
-
-        try {
-            // explicit __destructor() call, should throw UnrecoverableMutexException
-            $lockImplementor->__destruct();
-        } catch (UnrecoverableMutexException $e) {
-            // make backend available again
-            $backend->setAvailable(true);
-            // release lock
-            $this->assertTrue($lockImplementor->releaseLock($name));
-            $this->assertFalse($lockImplementor->releaseLock($name));
-            $this->assertFalse($lockImplementor->isLocked($name));
-
-            return;
-        }
-
-        $this->fail('An expected exception has not been raised.');
-    }
-
-    /**
      * @issue https://github.com/arvenil/ninja-mutex/issues/12
      * @medium Timeout for test increased to ~5s http://stackoverflow.com/a/10535787/916440
      *
