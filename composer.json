@@ -1,6 +1,9 @@
 {
-    "name": "arvenil/ninja-mutex",
+    "name": "antriver/ninja-mutex",
     "description": "Simple to use mutex implementation that can use flock, memcache, memcached, mysql or redis for locking",
+    "replace": {
+        "arvenil/ninja-mutex": "*"
+    },
     "homepage" : "https://github.com/arvenil/ninja-mutex",
     "keywords" : ["mutex", "lock", "locking", "flock", "memcache", "memcached", "mysql", "redis"],
     "license": "MIT",
