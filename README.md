@@ -1,3 +1,14 @@
+This is a fork of https://github.com/arvenil/ninja-mutex until 2 things are solved in the upstream repo:
+
+ * https://github.com/arvenil/ninja-mutex/pull/31 to support timeouts with Predis. (This repo contains that PR)
+ * Stop throwing exceptions in destructors. There is this PR open: https://github.com/arvenil/ninja-mutex/pull/40 (This repo contains this branch instead: https://github.com/arvenil/ninja-mutex/compare/master...antriver:no-destructor-exceptions)
+
+Install the fork with:
+
+    composer require antriver/ninja-mutex
+
+but beware this is going to be abandoned if the upstream repo has the changes merged in.
+
 [![MIT license](http://img.shields.io/badge/license-MIT-brightgreen.svg)](http://opensource.org/licenses/MIT)
 [![GitHub version](https://badge.fury.io/gh/arvenil%2Fninja-mutex.svg)](http://badge.fury.io/gh/arvenil%2Fninja-mutex)
 [![Build Status](https://travis-ci.org/arvenil/ninja-mutex.svg?branch=master)](https://travis-ci.org/arvenil/ninja-mutex)
